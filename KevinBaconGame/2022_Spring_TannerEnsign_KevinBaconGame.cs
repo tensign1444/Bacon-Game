@@ -10,29 +10,35 @@ namespace KevinBaconGame
     {
 
         private static string[] FileNames; //Holds the names in the file along with the movies
-        private static MathGraph<string> Actors;
-        private static SortedDictionary<string, List<string>> ActorsAndMovies;
-        private static int SeperationDegree;
-        
+        private static MathGraph<string> Actors; //Graph with all the actors.
+        private static int SeperationDegree; //Seperation Degree count
+
 
         static void Main(string[] args)
         {
-            
-            
-            Driver($"DataBase.txt");
-            
-            
+            try
+            {
+                Driver(args[0]);
+            }
+            catch (IndexOutOfRangeException ee)
+            {
+                Console.WriteLine($"ERROR! {ee.Message}");
+                Environment.Exit(0);
+            }
+
+
+
         }
 
 
 
         /// <summary>
-        /// This is the driver method which drives the whole program
+        /// This is the driver method which drives the whole program, writes to the console, calls the other methods and uses the if statements along with timing
         /// </summary>
         /// <param name="fileText"></param>
         static void Driver(string fileText)
         {
-            
+            FileInfo file = new FileInfo(fileText);
             Stopwatch timer = new Stopwatch();
             timer.Start();
             Actors = new MathGraph<string>("Actors");
@@ -41,73 +47,85 @@ namespace KevinBaconGame
             AddActorsToGraph();
             timer.Stop();
 
-            
-            Console.WriteLine($"Time Elapsed To Read File and Add to Graph : {timer.ElapsedMilliseconds} ms");
 
-            
+            Console.WriteLine($"Loaded {fileText} ({file.Length} bytes) in {timer.ElapsedMilliseconds} ms");
+
+
 
             while (true)
             {
                 Console.ForegroundColor = ConsoleColor.White;
-                Console.WriteLine("Please choose two actors.");
+                Console.Write("Please choose two actors > ");
                 SeperationDegree = 0;
-                
+
                 string read = Console.ReadLine();
 
-                if(read.ToUpper().Equals("EXIT") || read.ToUpper().Equals("QUIT"))
+                if (read.ToUpper().Equals("EXIT") || read.ToUpper().Equals("QUIT") || read.ToUpper().Equals("Q") || read.ToUpper().Equals("E"))
                     Environment.Exit(0);
-                
 
-                string[] str = read.Split(" and ");
-                timer.Reset();
-                timer.Start();
+                if (read.ToUpper().Contains(" AND "))
+                {
+                    string[] str = read.Split(" and ");
+                    timer.Reset();
+                    timer.Start();
 
-                if (!Actors.ContainsVertex(str[0]))
-                {
-                    timer.Stop();
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"The actor {str[0]} is not in the graph.");
-                    
-                }
-                if (!Actors.ContainsVertex(str[1]))
-                {
-                    timer.Stop();
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"The actor {str[1]} is not in the graph.");
+                    if (!Actors.ContainsVertex(str[0]))
+                    {
+                        timer.Stop();
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine($"The actor {str[0]} is not in the graph.");
+
+                    }
+                    if (!Actors.ContainsVertex(str[1]))
+                    {
+                        timer.Stop();
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine($"The actor {str[1]} is not in the graph.");
+
+                    }
+                    else
+                    {
+                        if (!CheckIfConnected(str[0], str[1]))
+                        {
+                            timer.Stop();
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.WriteLine("The two actors do not have a connection.");
+
+                        }
+                        else
+                        {
+                            Console.WriteLine($"This database has {str[0]} in {Actors.CountAdjacent(str[0])} movie(s).");
+                            Console.WriteLine($"This database has {str[1]} in {Actors.CountAdjacent(str[1])} movie(s).");
+                            Console.WriteLine($"There are {Actors.CountComponents()} different sets of actors in this database.");
+                            Console.WriteLine($"They are in a set with {Actors.CountConnectedTo(str[0])} other movies and actors.");
+                            Console.WriteLine("_________CONNECTION BELOW____________");
+                            GetShortestPathToActor(str[0], str[1]);
+                            timer.Stop();
+                            Console.Write($"There are {SeperationDegree} degrees of separation between '");
+                            Console.ForegroundColor = ConsoleColor.Blue;
+                            Console.Write($"{str[0]}");
+                            Console.ForegroundColor = ConsoleColor.White;
+                            Console.Write($"' and '");
+                            Console.ForegroundColor = ConsoleColor.Blue;
+                            Console.Write($"{str[1]}");
+                            Console.ForegroundColor = ConsoleColor.White;
+                            Console.Write($"'.\n");
+                        }
+
+                    }
+
+
+
 
                 }
                 else
                 {
-                    if (!CheckIfConnected(str[0], str[1]))
-                    {
-                        timer.Stop();
-                        Console.ForegroundColor = ConsoleColor.Red;
-                        Console.WriteLine("The two actors do not have a connection.");
-                        
-                    }
-                    else
-                    {
-                        Console.WriteLine($"This database has {str[0]} in {Actors.CountAdjacent(str[0])} movie(s).");
-                        Console.WriteLine($"This database has {str[1]} in {Actors.CountAdjacent(str[1])} movie(S).");
-                        Console.WriteLine($"There are {Actors.CountComponents()} different sets of actors in this database .");
-                        Console.WriteLine($"They are in a set with {Actors.CountConnectedTo(str[0])} other movies and actors.");
-                        Console.WriteLine("_________CONNECTION BELOW____________");
-                        GetShortestPathToActor(str[0], str[1]);
-                        timer.Stop();
-                        Console.Write($"There are {SeperationDegree} degrees of seperation between '{str[0]}' and '{str[1]}'");
-                        Console.ForegroundColor = ConsoleColor.Blue;
-                        Console.Write($"{str[0]}");
-                        Console.ForegroundColor = ConsoleColor.White;
-                        Console.Write($"' and '");
-                        Console.ForegroundColor = ConsoleColor.Blue;
-                        Console.Write($"{str[1]}");
-                        Console.ForegroundColor = ConsoleColor.White;
-                        Console.Write($"'\n");               
-                    }
-
+                    timer.Stop();
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine($"Input must be in format 'ACTOR and ACTOR'.");
                 }
 
-                Console.WriteLine($"Time Elapsed To Search over {Actors.CountVertices()} vertices and {Actors.CountEdges()} edges : {timer.ElapsedMilliseconds} ms");
+                Console.WriteLine($"Time Elapsed To Search over {Actors.CountVertices()} vertices's and {Actors.CountEdges()} edges : {timer.ElapsedMilliseconds} ms");
             }
 
         }
@@ -146,7 +164,7 @@ namespace KevinBaconGame
                     break;
                 if (Actors.ContainsVertex(temp[0]) && Actors.ContainsVertex(temp[1]))
                     Actors.AddEdge(temp[0], temp[1]);
-                else if(Actors.ContainsVertex(temp[0]) && !Actors.ContainsVertex(temp[1]))
+                else if (Actors.ContainsVertex(temp[0]) && !Actors.ContainsVertex(temp[1]))
                 {
                     Actors.AddVertex(temp[1]);
                     Actors.AddEdge(temp[0], temp[1]);
@@ -178,10 +196,8 @@ namespace KevinBaconGame
             try
             {
                 List<string> temp = Actors.FindShortestPath(str1, str2);
-              
-                string returnVal = "";
 
-                for(int i = 0; i < temp.Count - 2; i+=2)
+                for (int i = 0; i < temp.Count - 2; i += 2)
                 {
                     Console.ForegroundColor = ConsoleColor.Blue;
                     Console.Write($"{temp[i]}");
@@ -201,10 +217,10 @@ namespace KevinBaconGame
             catch (ArgumentException e)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine( "There is no path to this item or the actor does not exist.");
+                Console.WriteLine("There is no path to this item or the actor does not exist.");
             }
         }
-        
-       
+
+
     }
 }
