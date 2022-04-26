@@ -12,13 +12,14 @@ namespace KevinBaconGame
         private static string[] FileNames; //Holds the names in the file along with the movies
         private static MathGraph<string> Actors; //Graph with all the actors.
         private static int SeperationDegree; //Seperation Degree count
+        private static string funFactMovie; //holder for a movie name
 
 
         static void Main(string[] args)
         {
             try
             {
-                Driver(args[0]);
+                Driver($"DataBase.txt");
             }
             catch (IndexOutOfRangeException ee)
             {
@@ -42,6 +43,7 @@ namespace KevinBaconGame
             Stopwatch timer = new Stopwatch();
             timer.Start();
             Actors = new MathGraph<string>("Actors");
+            funFactMovie = "";
 
             ReadFile(fileText);
             AddActorsToGraph();
@@ -110,6 +112,7 @@ namespace KevinBaconGame
                             Console.Write($"{str[1]}");
                             Console.ForegroundColor = ConsoleColor.White;
                             Console.Write($"'.\n");
+                            FunFact(str[0]);
                         }
 
                     }
@@ -128,6 +131,18 @@ namespace KevinBaconGame
                 Console.WriteLine($"Time Elapsed To Search over {Actors.CountVertices()} vertices's and {Actors.CountEdges()} edges : {timer.ElapsedMilliseconds} ms");
             }
 
+        }
+
+        static void FunFact(string actor)
+        {          
+            Console.ForegroundColor = ConsoleColor.Blue;
+            Console.Write($"'{actor}'");
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.Write($" has been in {Actors.CountAdjacent(actor)} movies in this data base and there were {Actors.CountAdjacent(funFactMovie)} different actors in '");
+            Console.ForegroundColor = ConsoleColor.Blue;
+            Console.Write($"'{funFactMovie}'");
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.Write($" in this data base.\n");
         }
 
         /// <summary>
@@ -205,6 +220,8 @@ namespace KevinBaconGame
                     Console.Write(" is in ");
                     Console.ForegroundColor = ConsoleColor.Green;
                     Console.Write($"{temp[i + 1]}");
+                    if(i == 0)
+                        funFactMovie = temp[i + 1];
                     Console.ForegroundColor = ConsoleColor.White;
                     Console.Write(" as is ");
                     Console.ForegroundColor = ConsoleColor.Blue;
